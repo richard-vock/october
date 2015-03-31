@@ -24,16 +24,46 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-DM_LOG2E=1.44269504088896340736)
 endif()
 
+# mandatory
 find_package(Eigen)
 find_package(OpenCV COMPONENTS core imgproc highgui)
+find_package(Boost COMPONENTS system filesystem)
+
+# optional
+find_package(Cereal)
+find_package(OpenCascade)
+find_package(IfcOpenShell)
+find_package(OpenMesh)
 
 file (GLOB_RECURSE obj RELATIVE "${PROJECT_SOURCE_DIR}" "src/*.cpp")
-if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGUI_FOUND)
+if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGUI_FOUND AND Boost_FOUND)
 	include_directories(${EIGEN_INCLUDE_DIRS})
 	include_directories(${OpenCV_INCLUDE_DIRS})
+	include_directories(${Boost_INCLUDE_DIRS})
+
+    if(CEREAL_FOUND)
+        include_directories(${CEREAL_INCLUDE_DIR})
+        add_definitions(-DWITH_CEREAL)
+    endif(CEREAL_FOUND)
+
+    if(OPENCASCADE_FOUND AND IFCOPENSHELL_FOUND)
+        include_directories(${OPENCASCADE_INCLUDE_DIR})
+        include_directories(${IFCOPENSHELL_INCLUDE_DIR})
+        add_definitions(-DWITH_IFCOPENSHELL)
+    else()
+        set(OPENCASCADE_LIBRARIES "")
+        set(IFCOPENSHELL_LIBRARIES "")
+    endif(OPENCASCADE_FOUND AND IFCOPENSHELL_FOUND)
+
+    if(OPENMESH_FOUND)
+        include_directories(${OPENMESH_INCLUDE_DIR})
+        add_definitions(-DWITH_OPENMESH)
+    else()
+        set(OPENMESH_LIBRARIES "")
+    endif(OPENMESH_FOUND)
 
     add_library(october SHARED ${obj})
-    target_link_libraries(october ${OpenCV_LIBRARIES} "dl")
+    target_link_libraries(october ${OpenCV_LIBRARIES} ${BOOST_LIBRARIES} ${OPENCASCADE_LIBRARIES} ${IFCOPENSHELL_LIBRARIES} ${OPENMESH_LIBRARIES} "dl")
 
 	# install binary
     if (WIN32)

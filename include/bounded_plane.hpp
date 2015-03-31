@@ -2,10 +2,13 @@
 #define _OCTOBER_BOUNDED_PLANE_HPP_
 
 #include "types.hpp"
+#include "cereal.hpp"
 
 namespace october {
 
 class bounded_plane {
+    CEREAL_ACCESS
+
     public:
         typedef std::shared_ptr<bounded_plane>       ptr_t;
         typedef std::weak_ptr<bounded_plane>         wptr_t;
@@ -48,6 +51,15 @@ class bounded_plane {
     protected:
         bounded_plane(const mat3f_t& base, const vec3f_t& origin, const std::vector<vec3f_t>& points);
 
+#ifdef WITH_CEREAL
+    private:
+        bounded_plane();
+
+        template <typename Archive>
+        void serialize(Archive& ar);
+#endif // WITH_CEREAL
+
+
     protected:
         mat3f_t               base_;
         vec3f_t               origin_;
@@ -56,6 +68,7 @@ class bounded_plane {
         bbox3f_t              global_bbox_;
 };
 
+#include "impl/bounded_plane.hpp"
 
 } // october
 

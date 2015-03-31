@@ -17,6 +17,8 @@ typedef Eigen::Vector2f vec2f_t;
 typedef Eigen::Vector2i vec2i_t;
 typedef Eigen::Vector3f vec3f_t;
 typedef Eigen::Vector3i vec3i_t;
+typedef Eigen::Vector4f vec4f_t;
+typedef Eigen::Vector4i vec4i_t;
 
 typedef Eigen::Matrix3f mat3f_t;
 typedef Eigen::Matrix4f mat4f_t;

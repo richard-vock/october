@@ -13,39 +13,48 @@ bounded_plane::ptr_t bounded_plane::from_points(const std::vector<vec3f_t>& poin
 bounded_plane::~bounded_plane() {
 }
 
-const mat3f_t& bounded_plane::base() const {
+const mat3f_t&
+bounded_plane::base() const {
     return base_;
 }
 
-vec3f_t bounded_plane::normal() const {
+vec3f_t
+bounded_plane::normal() const {
     return base_.col(2);
 }
 
-const vec3f_t& bounded_plane::origin() const {
+const vec3f_t&
+bounded_plane::origin() const {
     return origin_;
 }
 
-const std::vector<vec3f_t>& bounded_plane::points() const {
+const std::vector<vec3f_t>&
+bounded_plane::points() const {
     return points_;
 }
 
-const bbox2f_t& bounded_plane::local_bounding_box() const {
+const bbox2f_t&
+bounded_plane::local_bounding_box() const {
     return local_bbox_;
 }
 
-const bbox3f_t& bounded_plane::global_bounding_box() const {
+const bbox3f_t&
+bounded_plane::global_bounding_box() const {
     return global_bbox_;
 }
 
-vec2f_t bounded_plane::project_2d(const vec3f_t& position) const {
+vec2f_t
+bounded_plane::project_2d(const vec3f_t& position) const {
     return project_3d(position).head(2);
 }
 
-vec3f_t bounded_plane::project_3d(const vec3f_t& position) const {
+vec3f_t
+bounded_plane::project_3d(const vec3f_t& position) const {
     return base_.transpose() * (position - origin_);
 }
 
-std::vector<vec3f_t> bounded_plane::area_polygon() const {
+std::vector<vec3f_t>
+bounded_plane::area_polygon() const {
     vec2f_t p0 = local_bbox_.min(), p1, p2 = local_bbox_.max(), p3;
     p1 << p2[0], p0[1];
     p3 << p0[0], p2[1];
@@ -60,7 +69,8 @@ std::vector<vec3f_t> bounded_plane::area_polygon() const {
     };
 }
 
-float bounded_plane::local_exterior_distance(const_ptr_t other) const {
+float
+bounded_plane::local_exterior_distance(const_ptr_t other) const {
     std::vector<vec3f_t> poly_0 = area_polygon();
     std::vector<vec3f_t> poly_1 = other->area_polygon();
     bbox2f_t proj_bbox_0, proj_bbox_1;
@@ -74,7 +84,8 @@ float bounded_plane::local_exterior_distance(const_ptr_t other) const {
     return std::min(proj_bbox_0.exteriorDistance(local_bbox_), proj_bbox_1.exteriorDistance(other->local_bbox_));
 }
 
-std::pair<vec2f_t, vec2f_t> bounded_plane::project_2d_line(const vec3f_t& project_dir) const {
+std::pair<vec2f_t, vec2f_t>
+bounded_plane::project_2d_line(const vec3f_t& project_dir) const {
     std::vector<vec3f_t> poly = area_polygon();
     vec3f_t line_dir = project_dir.cross(base_.col(2)).normalized();
     std::vector<float> lambdas;
@@ -87,15 +98,18 @@ std::pair<vec2f_t, vec2f_t> bounded_plane::project_2d_line(const vec3f_t& projec
     return {start, end};
 }
 
-bool bounded_plane::is_orthogonal_to(const vec3f_t& dir, float angular_precision) const {
+bool
+bounded_plane::is_orthogonal_to(const vec3f_t& dir, float angular_precision) const {
     return (1.f - fabs(normal().dot(dir))) < angular_precision;
 }
 
-bool bounded_plane::is_perpendicular_to(const vec3f_t& dir, float angular_precision) const {
+bool
+bounded_plane::is_perpendicular_to(const vec3f_t& dir, float angular_precision) const {
     return fabs(normal().dot(dir)) < angular_precision;
 }
 
-void bounded_plane::transform(const mat4f_t& transformation) {
+void
+bounded_plane::transform(const mat4f_t& transformation) {
     affine3f_t t;
     t = transformation;
     origin_ = t * origin_;
@@ -117,5 +131,11 @@ bounded_plane::bounded_plane(const mat3f_t& base, const vec3f_t& origin, const s
         local_bbox_.extend(project_2d(p));
     }
 }
+
+#ifdef WITH_CEREAL
+bounded_plane::bounded_plane() {
+}
+#endif // WITH_CEREAL
+
 
 } // october
