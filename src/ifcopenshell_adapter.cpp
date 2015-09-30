@@ -33,12 +33,32 @@ extract_objects_(const std::string& ifc_file);
 std::vector<bounded_plane::ptr_t>
 ifc_wall_planes_(const ifc_objects_t& objects, float area_threshold, float angle_threshold);
 
-bool ifcopenshell_adapter::supports_extension(const std::string& extension) {
-    return extension == ".ifc";
+
+ifcopenshell_adapter::ifcopenshell_adapter() : adapter() {
 }
 
-std::vector<bounded_plane::ptr_t> ifcopenshell_adapter::extract_planes(const std::string& file_path, float area_threshold, float angle_threshold) {
-    auto objects = extract_objects_(file_path);
+ifcopenshell_adapter::~ifcopenshell_adapter() {
+}
+
+bool
+ifcopenshell_adapter::supports_extension(const std::vector<std::string>& extensions) {
+    bool support = true;
+    for (const auto& ext : extensions) {
+        if (ext != ".ifc") {
+            support = false;
+            break;
+        }
+    }
+    return support;
+}
+
+std::vector<bounded_plane::ptr_t>
+ifcopenshell_adapter::extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold) {
+    ifc_objects_t objects;
+    for (const auto& path : file_paths) {
+        auto file_objects = extract_objects_(path);
+        objects.insert(objects.end(), file_objects.begin(), file_objects.end());
+    }
     return ifc_wall_planes_(objects, area_threshold, angle_threshold);
 }
 
@@ -53,7 +73,7 @@ ifc_wall_planes_(const ifc_objects_t& objects, float area_threshold, float angle
     std::vector<bounded_plane::ptr_t> planes;
     for (const auto& obj : objects) {
         std::string type = std::get<2>(obj);
-        if (type != "ifcwall" && type != "ifcwallstandardcase") {
+        if (type != "ifcwall" && type != "ifcwallstandardcase" && type != "ifcfooting" && type != "ifcslab") {
             continue;
         }
         const openmesh_t& mesh = std::get<0>(obj);

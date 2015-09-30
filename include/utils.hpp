@@ -14,6 +14,7 @@ std::shared_ptr<image_t> add_border(std::shared_ptr<const image_t> img, uint32_t
 
 void pca(const std::vector<vec3f_t>& points, mat3f_t& components, vec3f_t& centroid);
 
+std::vector<mat4f_t> base_rotations();
 
 } // october
 

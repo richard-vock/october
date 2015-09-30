@@ -42,4 +42,26 @@ void pca(const std::vector<vec3f_t>& points, mat3f_t& components, vec3f_t& centr
     components = svd.matrixV();
 }
 
+std::vector<mat4f_t> base_rotations() {
+    std::vector<mat4f_t> results(24, mat4f_t::Identity());
+
+    uint32_t idx = 0;
+    for (uint32_t i = 0; i < 3; ++i) {
+        for (uint32_t tmp = 0; tmp < 2; ++tmp) {
+            uint32_t j = (tmp+1) % 3;
+            float sign_i = 1.f, sign_j = 1.f;
+            for (uint32_t s = 0; s < 4; ++s) {
+                if (s / 2) sign_i = -1.f;
+                if (s % 2) sign_j = -1.f;
+                results[idx].block<3,1>(0,0) = sign_i * vec3f_t::Unit(i);
+                results[idx].block<3,1>(0,1) = sign_j * vec3f_t::Unit(j);
+                results[idx].block<3,1>(0,2) = results[idx].block<3,1>(0,0).cross(results[idx].block<3,1>(0,1));
+                ++idx;
+            }
+        }
+    }
+
+    return results;
+}
+
 } // october

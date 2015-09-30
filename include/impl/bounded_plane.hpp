@@ -6,11 +6,11 @@
 template <typename Archive>
 inline void
 bounded_plane::serialize(Archive& ar) {
-    cereal::make_nvp("base", base_);
-    cereal::make_nvp("origin", origin_);
-    cereal::make_nvp("points", points_);
-    cereal::make_nvp("local_bbox", local_bbox_);
-    cereal::make_nvp("global_bbox", global_bbox_);
+    ar(cereal::make_nvp("base", base_));
+    ar(cereal::make_nvp("origin", origin_));
+    ar(cereal::make_nvp("points", points_));
+    ar(cereal::make_nvp("local_bbox", local_bbox_));
+    ar(cereal::make_nvp("global_bbox", global_bbox_));
 }
 
 #endif // WITH_CEREAL

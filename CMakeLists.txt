@@ -34,6 +34,8 @@ find_package(Cereal)
 find_package(OpenCascade)
 find_package(IfcOpenShell)
 find_package(OpenMesh)
+find_package(PCL COMPONENTS common io)
+find_package(PrimitiveDetection)
 
 file (GLOB_RECURSE obj RELATIVE "${PROJECT_SOURCE_DIR}" "src/*.cpp")
 if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGUI_FOUND AND Boost_FOUND)
@@ -55,6 +57,16 @@ if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGU
         set(IFCOPENSHELL_LIBRARIES "")
     endif(OPENCASCADE_FOUND AND IFCOPENSHELL_FOUND)
 
+    if(PCL_FOUND AND PRIMITIVE_DETECTION_FOUND)
+        include_directories(${PCL_INCLUDE_DIRS})
+        include_directories(${PRIMITIVE_DETECTION_INCLUDE_DIRS})
+        add_definitions(-DWITH_PCL)
+        add_definitions(-DWITH_PRIMITIVE_DETECTION)
+    else()
+        set(PCL_LIBRARIES "")
+        set(PRIMITIVE_DETECTION_LIBRARIES "")
+    endif(PCL_FOUND AND PRIMITIVE_DETECTION_FOUND)
+
     if(OPENMESH_FOUND)
         include_directories(${OPENMESH_INCLUDE_DIR})
         add_definitions(-DWITH_OPENMESH)
@@ -63,7 +75,7 @@ if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGU
     endif(OPENMESH_FOUND)
 
     add_library(october SHARED ${obj})
-    target_link_libraries(october ${OpenCV_LIBRARIES} ${BOOST_LIBRARIES} ${OPENCASCADE_LIBRARIES} ${IFCOPENSHELL_LIBRARIES} ${OPENMESH_LIBRARIES} "dl")
+    target_link_libraries(october ${OpenCV_LIBRARIES} ${BOOST_LIBRARIES} ${OPENCASCADE_LIBRARIES} ${IFCOPENSHELL_LIBRARIES} ${OPENMESH_LIBRARIES} ${PCL_LIBRARIES} ${PRIMITIVE_DETECTION_LIBRARIES} "dl")
 
 	# install binary
     if (WIN32)

@@ -20,7 +20,15 @@ void affine_transform_image(std::shared_ptr<image_t> img, const affine2f_t& tran
 
 Eigen::Matrix3f image_transform(const bbox2f_t& bbox, uint32_t width, uint32_t height, uint32_t border = 0);
 
+vec2f_t image_transform_1d(float min_value, float max_value, uint32_t height, uint32_t border = 0);
+
+template <int D>
+Eigen::Matrix<float, D+1, D+1> affine_image_transform(const Eigen::AlignedBox<float, D>& bbox, const Eigen::Matrix<int, D, 1>& img_size, int border = 0);
+
 std::shared_ptr<image_t> to_log_polar(std::shared_ptr<const image_t> img, vec2f_t center, uint32_t width, uint32_t height);
+
+
+#include "impl/transforms.hpp"
 
 
 } // october

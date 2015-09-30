@@ -72,6 +72,23 @@ Eigen::Matrix3f image_transform(const bbox2f_t& bbox, uint32_t width, uint32_t h
     return transform.matrix();
 }
 
+vec2f_t image_transform_1d(float min_value, float max_value, uint32_t height, uint32_t border) {
+    float range = max_value - min_value;
+    float center = min_value + 0.5f * range;
+
+    //transform = Eigen::Translation<float, 1>(-center);
+    //transform = Eigen::Scaling<float, 1>(1.f / range) * transform;
+    //transform = Eigen::Scaling<float, 1>(-1.f) * transform;
+    //transform = Eigen::Scaling<float, 1>(height - 2 * border) * transform;
+    //transform = Eigen::Translation<float, 1>(0.5f * height) * transform;
+    //return transform.matrix();
+
+    float scale = static_cast<float>(border * height) - 0.5f * static_cast<float>(height * height);
+    float shift = -scale * center * range;
+    scale *= 1.f / range;
+    return vec2f_t(scale, shift);
+}
+
 std::shared_ptr<image_t> to_log_polar(std::shared_ptr<const image_t> img, vec2f_t center, uint32_t width, uint32_t height) {
     CvPoint2D32f c;
     c.x = center[0];

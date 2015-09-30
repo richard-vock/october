@@ -2,15 +2,30 @@
 #define _OCTOBER_IFCOPENSHELL_ADAPTER_HPP_
 #if defined(WITH_IFCOPENSHELL) && defined(WITH_OPENMESH)
 
-#include "bounded_plane.hpp"
+#include "adapter.hpp"
 
 namespace october {
 
-struct ifcopenshell_adapter {
-    static bool supports_extension(const std::string& extension);
+class ifcopenshell_adapter : public adapter {
+    public:
+        typedef std::shared_ptr<ifcopenshell_adapter>       ptr_t;
+        typedef std::weak_ptr<ifcopenshell_adapter>         wptr_t;
+        typedef std::shared_ptr<const ifcopenshell_adapter> const_ptr_t;
+        typedef std::weak_ptr<const ifcopenshell_adapter>   const_wptr_t;
 
-    static std::vector<bounded_plane::ptr_t> extract_planes(const std::string& file_path, float area_threshold, float angle_threshold);
+    public:
+        ifcopenshell_adapter();
+
+        virtual
+        ~ifcopenshell_adapter();
+
+        bool
+        supports_extension(const std::vector<std::string>& extensions);
+
+        std::vector<bounded_plane::ptr_t>
+        extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold);
 };
+
 
 } // october
 

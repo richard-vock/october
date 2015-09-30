@@ -1,7 +1,9 @@
 #ifndef _OCTOBER_REPRESENTATION_HPP_
 #define _OCTOBER_REPRESENTATION_HPP_
 
-#include "bounded_plane.hpp"
+#include <vector>
+
+#include "adapter.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
@@ -13,8 +15,6 @@ namespace october {
 
 
 class representation {
-    CEREAL_ACCESS
-
     public:
         typedef std::shared_ptr<representation>       ptr_t;
         typedef std::weak_ptr<representation>         wptr_t;
@@ -22,19 +22,21 @@ class representation {
         typedef std::weak_ptr<const representation>   const_wptr_t;
 
     public:
-        template <typename... Adapters>
-        static ptr_t from_file(const fs::path& file_path, float area_threshold, float angle_threshold);
+        static ptr_t from_files(const std::vector<fs::path>& file_paths, float area_threshold, float angle_threshold, const std::vector<adapter::ptr_t>& adapters);
 
-        virtual ~representation();
+        ~representation();
 
         const std::vector<bounded_plane::ptr_t>& planes() const;
+
+        void transform(const mat4f_t& transformation);
 
     protected:
         representation(const std::vector<bounded_plane::ptr_t>& planes);
 
 #ifdef WITH_CEREAL
-    private:
-        representation();
+    public:
+        representation() = default;
+        CEREAL_ACCESS
 
         template <typename Archive>
         void serialize(Archive& ar);
@@ -48,5 +50,6 @@ class representation {
 
 
 } // october
+
 
 #endif /* _OCTOBER_REPRESENTATION_HPP_ */
