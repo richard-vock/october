@@ -88,7 +88,8 @@ primary_line_direction_(const std::vector<vec2f_t>& lines, float cos_threshold) 
     return primary_dir.normalized();
 }
 
-mat4f_t align_z_1d(const std::vector<float>& z_values_0, const std::vector<float>& z_values_1) {
+mat4f_t align_z_1d(const std::vector<std::pair<float, bool>>& z_values_0, const std::vector<std::pair<float, bool>>& z_values_1) {
+    /*
     std::cout << "z's 0" << "\n";
     for (const auto& z : z_values_0) {
         std::cout << z << "\n";
@@ -97,40 +98,68 @@ mat4f_t align_z_1d(const std::vector<float>& z_values_0, const std::vector<float
     for (const auto& z : z_values_1) {
         std::cout << z << "\n";
     }
-    float min_z = std::min(*std::min_element(z_values_0.begin(), z_values_0.end()), *std::min_element(z_values_1.begin(), z_values_1.end()));
-    float max_z = std::max(*std::max_element(z_values_0.begin(), z_values_0.end()), *std::max_element(z_values_1.begin(), z_values_1.end()));
+    */
+    float min_z = std::min(*std::min_element(z_values_0.begin(), z_values_0.end()), *std::min_element(z_values_1.begin(), z_values_1.end())).first;
+    float max_z = std::max(*std::max_element(z_values_0.begin(), z_values_0.end()), *std::max_element(z_values_1.begin(), z_values_1.end())).first;
     //vec2f_t img_transform = image_transform_1d(min_z, max_z, 2000, 200);
     Eigen::AlignedBox<float, 1> z_bbox;
     z_bbox.min()[0] = min_z;
     z_bbox.max()[0] = max_z;
     Eigen::Matrix<int, 1, 1> z_img_size;
     z_img_size << 2000;
-    auto img_transform = affine_image_transform(z_bbox, z_img_size, 50);
+    auto img_transform = affine_image_transform(z_bbox, z_img_size, 500);
 
-    image_t img_0(2000, 5, CV_32FC1, cv::Scalar::all(0.f));
-    image_t img_1(2000, 5, CV_32FC1, cv::Scalar::all(0.f));
-    for (auto z : z_values_0) {
-        uint32_t i = static_cast<int>((img_transform * vec2f_t(z, 1.f))[0]);
-        for (int j = 0; j < 5; ++j) {
-            img_0.at<float>(j, i) = 1.f;
+    std::shared_ptr<image_t> img_0 = std::make_shared<image_t>(2000, 400, CV_32FC1, cv::Scalar::all(0.f));
+    std::shared_ptr<image_t> img_1 = std::make_shared<image_t>(2000, 400, CV_32FC1, cv::Scalar::all(0.f));
+    
+    int zTrue = 0;
+    int zFalse = 0;
+    
+    for (const auto& z : z_values_0) {
+        uint32_t i = static_cast<int>((img_transform * vec2f_t(z.first, 1.f))[0]);
+        int min_j = z.second ? 0 : 200;
+        int max_j = z.second ? 200 : 400;
+        if (z.second) ++zTrue;
+        if (!z.second) ++zFalse;
+        for (int j = min_j; j < max_j; ++j) {
+            for (int d = -1; d <= 1; ++d) {
+                img_0->at<float>(i+d, j) = 1.f;
+            }
         }
     }
-    for (auto z : z_values_1) {
-        uint32_t i = static_cast<int>((img_transform * vec2f_t(z, 1.f))[0]);
-        for (int j = 0; j < 5; ++j) {
-            img_1.at<float>(j, i) = 1.f;
+    for (const auto& z : z_values_1) {
+        uint32_t i = static_cast<int>((img_transform * vec2f_t(z.first, 1.f))[0]);
+        int min_j = z.second ? 0 : 200;
+        int max_j = z.second ? 200 : 400;
+        if (z.second) ++zTrue;
+        if (!z.second) ++zFalse;
+        for (int j = min_j; j < max_j; ++j) {
+            for (int d = -1; d <= 1; ++d) {
+                img_1->at<float>(i+d, j) = 1.f;
+            }
         }
     }
-	cv::Mat png_0(2000, 5, CV_16UC1), png_1(2000, 5, CV_16UC1);
-	img_0.convertTo(png_0, CV_16UC1, 65535.0);
-	img_1.convertTo(png_1, CV_16UC1, 65535.0);
+    
+    std::cout << zTrue << ", " << zFalse << std::endl;
+    
+    gaussian_blur(img_0, 2.0);
+    gaussian_blur(img_1, 2.0);
+    
+	cv::Mat png_0(2000, 50, CV_16UC1), png_1(2000, 50, CV_16UC1);
+	img_0->convertTo(png_0, CV_16UC1, 65535.0);
+	img_1->convertTo(png_1, CV_16UC1, 65535.0);
 	cv::imwrite("/tmp/a.png", png_0);
 	cv::imwrite("/tmp/b.png", png_1);
     float response = 0.f;
-    vec2f_t shift = phase_correlate(img_0, img_1, response);
-    std::cout << shift.transpose() << "\n";
+    vec2f_t shift = phase_correlate(*img_0, *img_1, response);
+    std::cout << "Z shift: " << shift.transpose() << "\n";
+
+    std::cout << "img transform:" << std::endl;
+    std::cout << img_transform << std::endl << std::endl;
 
     mat4f_t transform = mat4f_t::Identity();
+    transform(2, 3) = shift[1] / img_transform(0, 0);
+    
     return transform;
 }
 
@@ -193,7 +222,7 @@ align_lines_2d(std::vector<vec2f_t>& lines_2d_0, std::vector<vec2f_t>& lines_2d_
 }
 
 mat4f_t
-align_lines_2d_translation(std::vector<vec2f_t>& lines_2d_0, std::vector<vec2f_t>& lines_2d_1, float* response = nullptr) {
+align_lines_2d_translation(std::vector<vec2f_t>& lines_2d_0, std::vector<vec2f_t>& lines_2d_1, float* response = nullptr, uint32_t rot_idx = 0) {
     vec2f_t center_0, center_1;
     bbox2f_t bbox;
     std::tie(bbox, center_0, center_1) = normalize_lines_2d_(lines_2d_0, lines_2d_1);
@@ -205,6 +234,12 @@ align_lines_2d_translation(std::vector<vec2f_t>& lines_2d_0, std::vector<vec2f_t
     std::shared_ptr<image_t> img_1 = make_image(2000, 2000, 0.f);
     draw_lines(img_0, lines_2d_0, 1.f, 5, img_transform);
     draw_lines(img_1, lines_2d_1, 1.f, 5, img_transform);
+    
+    gaussian_blur(img_0, 10.0);
+    gaussian_blur(img_1, 10.0);
+    
+    write_image(img_0, "/tmp/img_0_" + std::to_string(rot_idx) + ".png");
+    write_image(img_1, "/tmp/img_1_" + std::to_string(rot_idx) + ".png");
 
     float signal_response;
     vec2f_t shift = phase_correlate(img_0, img_1, signal_response);
@@ -265,6 +300,7 @@ mat4f_t align_3d(const std::vector<bounded_plane::ptr_t>& planes_0, const std::v
     std::vector<mat4f_t> rotations = base_rotations();
     float max_response = 0.f;
     mat4f_t local_transform;
+    uint32_t rot_idx = 0;
     for (const auto& rotation : rotations) {
         mat4f_t pre_0 = rotation.transpose() * normalization_0;
 
@@ -292,12 +328,15 @@ mat4f_t align_3d(const std::vector<bounded_plane::ptr_t>& planes_0, const std::v
         }
 
         float response;
-        mat4f_t align_xy = align_lines_2d_translation(lines_2d_0, lines_2d_1, &response);
+        mat4f_t align_xy = align_lines_2d_translation(lines_2d_0, lines_2d_1, &response, rot_idx);
         if (response > max_response) {
             local_transform = align_xy * rotation.transpose();
             max_response = response;
             std::cout << rotation.transpose() << "\n";
+            std::cout << "Best rot idx: " << rot_idx << std::endl;
         }
+        
+        ++rot_idx;
     }
 
     return normalization_1.inverse() * local_transform * normalization_0;
@@ -322,9 +361,10 @@ align(const std::vector<bounded_plane::ptr_t>& planes_0, const std::vector<bound
     //projection_0.block<1,3>(0, 0) = projection_0.block<1,3>(1, 0).cross(projection_0.block<1,3>(0, 0)).normalized();
     //projection_1.block<1,3>(0, 0) = projection_1.block<1,3>(1, 0).cross(projection_1.block<1,3>(0, 0)).normalized();
 
+    /*
     std::vector<vec2f_t> lines_2d_0, lines_2d_1;
     for (const auto& p : planes_0) {
-        if (!p->is_parallel_to(up_0)) continue;
+        if (!p->is_parallel_to(up_0, 0.01f)) continue;
         vec2f_t src, tgt;
         //p->transform(projection_0);
         std::tie(src, tgt) = p->project_2d_line(vec3f_t::UnitZ());
@@ -332,43 +372,48 @@ align(const std::vector<bounded_plane::ptr_t>& planes_0, const std::vector<bound
         lines_2d_0.push_back(tgt);
     }
     for (const auto& p : planes_1) {
-        if (!p->is_parallel_to(up_1)) continue;
+        if (!p->is_parallel_to(up_1, 0.01f)) continue;
         vec2f_t src, tgt;
         //p->transform(projection_1);
         std::tie(src, tgt) = p->project_2d_line(vec3f_t::UnitZ());
         lines_2d_1.push_back(src);
         lines_2d_1.push_back(tgt);
     }
-
+    
     if (lines_2d_0.empty() || lines_2d_1.empty()) {
-        throw std::runtime_error("Unable to align: Wrong up direction?");
+        throw std::runtime_error("Unable to align (lines empty): Wrong up direction?");
     }
 
     auto align_xy = align_lines_2d(lines_2d_0, lines_2d_1);
+    */
+    
+    auto align_xy = align_3d(planes_0, planes_1);
 
-    std::vector<float> z_values_0, z_values_1;
+    std::vector<std::pair<float, bool>> z_values_0, z_values_1;
     for (const auto& p : planes_0) {
-        vec3f_t normal = (align_xy * p->normal().homogeneous()).head(3);
+        vec3f_t normal = align_xy.topLeftCorner<3, 3>() * p->normal();
         if (1.f - fabs(normal.dot(up_0)) < 0.01f) {
             vec3f_t origin = (align_xy * p->origin().homogeneous()).head(3);
-            z_values_0.push_back(origin.dot(up_0));
+            z_values_0.push_back(std::make_pair(origin.dot(up_0), normal[2] > 0.f));
         }
     }
     for (const auto& p : planes_1) {
-        vec3f_t normal = (align_xy * p->normal().homogeneous()).head(3);
+        vec3f_t normal = align_xy.topLeftCorner<3, 3>() * p->normal();
         if (1.f - fabs(normal.dot(up_1)) < 0.01f) {
             vec3f_t origin = (align_xy * p->origin().homogeneous()).head(3);
-            z_values_1.push_back(origin.dot(up_1));
+            z_values_1.push_back(std::make_pair(origin.dot(up_1), normal[2] > 0.f));
         }
     }
-
+    
     if (z_values_0.empty() || z_values_1.empty()) {
-        throw std::runtime_error("Unable to align: Wrong up direction?");
+        throw std::runtime_error("Unable to align (z values empty): Wrong up direction?");
     }
 
     auto align_z = align_z_1d(z_values_0, z_values_1);
+    
+    std::cout << "align_z = " << align_z << std::endl;
 
-    return projection_1.inverse() * align_z * align_lines_2d(lines_2d_0, lines_2d_1) * projection_0;
+    return projection_1.inverse() * align_z * align_xy * projection_0;
 }
 
 

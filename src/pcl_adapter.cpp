@@ -56,10 +56,12 @@ pcl_adapter::extract_planes(const std::vector<std::string>& file_paths, float ar
         if (primPlane->area() < area_threshold) continue;
         std::vector<int> indices = primPlane->indices();
         std::vector<vec3f_t> points(indices.size());
+        vec3f_t approx_normal = vec3f_t::Zero();
         for (uint32_t i = 0; i < indices.size(); ++i) {
             points[i] = cloud->points[indices[i]].getVector3fMap();
+            approx_normal += cloud->points[indices[i]].getNormalVector3fMap();
         }
-        planes.push_back(bounded_plane::from_points(points));
+        planes.push_back(bounded_plane::from_points(points, approx_normal.normalized()));
     }
 
     return planes;

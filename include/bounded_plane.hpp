@@ -14,7 +14,7 @@ class bounded_plane {
         typedef std::weak_ptr<const bounded_plane>   const_wptr_t;
 
     public:
-        static ptr_t from_points(const std::vector<vec3f_t>& points);
+        static ptr_t from_points(const std::vector<vec3f_t>& points, const vec3f_t& normal = vec3f_t::Zero());
 
         ~bounded_plane();
 
@@ -73,7 +73,7 @@ class bounded_plane {
         bbox3f_t              global_bbox_;
 };
 
-mat3f_t primary_normal_directions(const std::vector<bounded_plane::ptr_t>& planes, float cos_threshold);
+mat3f_t primary_normal_directions(const std::vector<bounded_plane::ptr_t>& planes, float cluster_cos_threshold, float vertical_cos_threshold = 2.f);
 
 
 #include "impl/bounded_plane.hpp"
