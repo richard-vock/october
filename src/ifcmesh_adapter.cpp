@@ -35,7 +35,16 @@ ifcmesh_adapter::extract_planes(const std::vector<std::string>& file_paths, floa
         fs::path p(path);
 
         openmesh_t mesh;
-        if (!OpenMesh::IO::read_mesh(mesh, p.string())) {
+        omerr().disable();
+        OpenMesh::IO::Options opt;
+        opt += OpenMesh::IO::Options::FaceNormal;
+        opt += OpenMesh::IO::Options::VertexNormal;
+
+        mesh.request_vertex_colors();
+        mesh.request_vertex_normals();
+        mesh.request_vertex_texcoords2D();
+        mesh.request_face_normals();
+        if (!OpenMesh::IO::read_mesh(mesh, p.string(), opt)) {
             throw std::runtime_error("Unable to load mesh file \"" + p.string() + "\"");
         }
 
