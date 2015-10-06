@@ -15,7 +15,7 @@ ifc_objects_t
 extract_objects_(const std::string& ifc_file);
 
 std::vector<bounded_plane::ptr_t>
-ifc_wall_planes_(const ifc_objects_t& objects, float area_threshold, float angle_threshold);
+ifc_wall_planes(const ifc_objects_t& objects, float area_threshold, float angle_threshold);
 
 
 ifcopenshell_adapter::ifcopenshell_adapter() : adapter() {
@@ -43,7 +43,7 @@ ifcopenshell_adapter::extract_planes(const std::vector<std::string>& file_paths,
         auto file_objects = extract_objects_(path);
         objects.insert(objects.end(), file_objects.begin(), file_objects.end());
     }
-    return ifc_wall_planes_(objects, area_threshold, angle_threshold);
+    return ifc_wall_planes(objects, area_threshold, angle_threshold);
 }
 
 std::vector<bounded_plane::ptr_t>
