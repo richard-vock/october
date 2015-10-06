@@ -5,27 +5,10 @@
 #include <set>
 #include <traverse.hpp>
 
-#include <OpenMesh/Core/IO/MeshIO.hh>
-#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
-#include <OpenMesh/Core/Mesh/Traits.hh>
 #include <ifcgeom/IfcGeomObjects.h>
-
 
 namespace october {
 
-
-struct openmesh_default_traits : public OpenMesh::DefaultTraits {
-	typedef OpenMesh::Vec4f  Color;
-
-	VertexAttributes( OpenMesh::Attributes::Normal | OpenMesh::Attributes::Color );
-	FaceAttributes( OpenMesh::Attributes::Normal );
-};
-
-typedef ::OpenMesh::TriMesh_ArrayKernelT<openmesh_default_traits> openmesh_t;
-
-typedef std::tuple<openmesh_t, std::string, std::string> ifc_object_t;
-
-typedef std::vector<ifc_object_t> ifc_objects_t;
 
 ifc_objects_t
 extract_objects_(const std::string& ifc_file);
@@ -63,7 +46,7 @@ ifcopenshell_adapter::extract_planes(const std::vector<std::string>& file_paths,
 }
 
 std::vector<bounded_plane::ptr_t>
-ifc_wall_planes_(const ifc_objects_t& objects, float area_threshold, float angle_threshold) {
+ifc_wall_planes(const ifc_objects_t& objects, float area_threshold, float angle_threshold) {
     typedef openmesh_t::VertexHandle          vertex_handle_t;
     typedef openmesh_t::FaceHandle            face_handle_t;
     typedef face_handle_t                     entity_t;

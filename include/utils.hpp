@@ -16,6 +16,15 @@ void pca(const std::vector<vec3f_t>& points, mat3f_t& components, vec3f_t& centr
 
 std::vector<mat4f_t> base_rotations();
 
+template <typename T, int Rows, int Columns, int Options>
+Eigen::Matrix<T, Rows, Columns, Options> compute_centroid(const std::vector<Eigen::Matrix<T, Rows, Columns, Options>>& values);
+
+std::vector<std::string> split_string(const std::string& str, const std::string& delim_regex);
+
+
+#include "impl/utils.hpp"
+
+
 } // october
 
 #endif /* _OCTOBER_UTILS_HPP_ */

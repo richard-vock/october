@@ -1,4 +1,5 @@
 #include <utils.hpp>
+#include <regex>
 
 namespace october {
 
@@ -62,6 +63,16 @@ std::vector<mat4f_t> base_rotations() {
     }
 
     return results;
+}
+
+std::vector<std::string> split_string(const std::string& str, const std::string& delim_regex) {
+    std::regex rgx(delim_regex);
+    std::sregex_token_iterator iter(str.begin(), str.end(), rgx, -1), end;
+    std::vector<std::string> tokens;
+    for ( ; iter != end; ++iter) {
+        tokens.push_back(*iter);
+    }
+    return tokens;
 }
 
 } // october

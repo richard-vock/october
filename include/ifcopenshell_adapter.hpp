@@ -3,6 +3,7 @@
 #if defined(WITH_IFCOPENSHELL) && defined(WITH_OPENMESH)
 
 #include "adapter.hpp"
+#include "ifc_mesh_types.hpp"
 
 namespace october {
 
@@ -25,6 +26,9 @@ class ifcopenshell_adapter : public adapter {
         std::vector<bounded_plane::ptr_t>
         extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold);
 };
+
+std::vector<bounded_plane::ptr_t>
+ifc_wall_planes(const ifc_objects_t& objects, float area_threshold, float angle_threshold);
 
 
 } // october
