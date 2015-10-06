@@ -4,10 +4,17 @@
 
 namespace october {
 
-bounded_plane::ptr_t bounded_plane::from_points(const std::vector<vec3f_t>& points) {
+bounded_plane::ptr_t bounded_plane::from_points(const std::vector<vec3f_t>& points, const vec3f_t& normal) {
     mat3f_t base;
     vec3f_t origin;
     pca(points, base, origin);
+    // If an (approximate) normal is given and the computed
+    // normal points in the opposite direction, flip the basis.
+    if (!normal.isZero()) {
+        if (base.col(2).dot(normal) < 0.f) {
+            base *= -1.f;
+        }
+    }
     return ptr_t(new bounded_plane(base, origin, points));
 }
 
@@ -160,17 +167,23 @@ bounded_plane::bounded_plane(const mat3f_t& base, const vec3f_t& origin, const s
     }
 }
 
-mat3f_t primary_normal_directions(const std::vector<bounded_plane::ptr_t>& planes, float cos_threshold) {
+mat3f_t primary_normal_directions(const std::vector<bounded_plane::ptr_t>& planes, float cluster_cos_threshold, float vertical_cos_threshold) {
     typedef std::vector<vec3f_t> cluster_t;
-    std::vector<vec3f_t> directions(planes.size());
-    std::transform(planes.begin(), planes.end(), directions.begin(), [&] (bounded_plane::ptr_t p) { return p->normal(); });
+    std::vector<vec3f_t> directions;
+    for (const auto& plane : planes) {
+        if (fabs(plane->normal()[2]) < vertical_cos_threshold) {
+            directions.push_back(plane->normal());
+        }
+    }
+    //std::transform(planes.begin(), planes.end(), directions.begin(), [&] (bounded_plane::ptr_t p) { return p->normal(); });
+    
     std::vector<cluster_t> clusters = greedy_cluster(
         directions,
         // check if dir belongs to cluster
         [&] (const vec3f_t& dir, const cluster_t& cluster) {
             bool included = true;
             for (const vec3f_t& d : cluster) {
-                if (1.f - fabs(d.dot(dir)) > cos_threshold) {
+                if (1.f - fabs(d.dot(dir)) > cluster_cos_threshold) {
                     included = false;
                     break;
                 }
@@ -192,8 +205,10 @@ mat3f_t primary_normal_directions(const std::vector<bounded_plane::ptr_t>& plane
         vec3f_t delta;
         uint32_t n = 0;
         for (const vec3f_t& dir : clusters[i]) {
+            vec3f_t flipped_dir = dir;
+            if (dir.dot(vec3f_t::Ones()) < 0.f) flipped_dir *= -1.f;
             ++n;
-            delta = dir - primary_directions.col(i);
+            delta = flipped_dir - primary_directions.col(i);
             primary_directions.col(i) += delta / static_cast<float>(n);
         }
         primary_directions.col(i).normalize();

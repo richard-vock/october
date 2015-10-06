@@ -38,5 +38,9 @@ void draw_lines(std::shared_ptr<image_t> img, const std::vector<vec2f_t>& lines,
     draw_lines(img, discrete_lines, color, thickness);
 }
 
+void gaussian_blur(std::shared_ptr<image_t> img, double sigma) {
+    cv::GaussianBlur(*img, *img, cv::Size(cv::Point(0, 0)), sigma);
+}
+
 
 } // october

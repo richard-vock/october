@@ -14,6 +14,7 @@ void draw_lines(std::shared_ptr<image_t> img, const std::vector<vec2f_t>& lines,
 
 void draw_lines(std::shared_ptr<image_t> img, const std::vector<vec2f_t>& lines, float color, int thickness, uint32_t width, uint32_t height, uint32_t border);
 
+void gaussian_blur(std::shared_ptr<image_t> img, double sigma);
 
 } // october
 
