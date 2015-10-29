@@ -24,7 +24,7 @@ class pcl_adapter : public adapter {
         supports_extension(const std::vector<std::string>& extensions);
 
         std::vector<bounded_plane::ptr_t>
-        extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold);
+        extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold, std::string& guid);
 
     protected:
         float     epsilon_;

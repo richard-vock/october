@@ -23,7 +23,7 @@ class adapter {
         supports_extension(const std::vector<std::string>& extensions) = 0;
 
         virtual std::vector<bounded_plane::ptr_t>
-        extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold) = 0;
+        extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold, std::string& guid) = 0;
 };
 
 

@@ -32,7 +32,12 @@ pcl_adapter::supports_extension(const std::vector<std::string>& extensions) {
 }
 
 std::vector<bounded_plane::ptr_t>
-pcl_adapter::extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold) {
+pcl_adapter::extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold, std::string& guid) {
+    std::string concat_paths;
+    for (const auto& p : file_paths) {
+        concat_paths += p;
+    }
+    guid = std::hash<std::string>()(concat_paths);
     cloud_t::Ptr cloud(new cloud_t());
     for (const auto& path : file_paths) {
         cloud_t::Ptr scan(new cloud_t());

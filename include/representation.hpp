@@ -30,8 +30,10 @@ class representation {
 
         void transform(const mat4f_t& transformation);
 
+        const std::string& guid() const;
+
     protected:
-        representation(const std::vector<bounded_plane::ptr_t>& planes);
+        representation(const std::vector<bounded_plane::ptr_t>& planes, const std::string& guid);
 
 #ifdef WITH_CEREAL
     public:
@@ -44,6 +46,7 @@ class representation {
 
     protected:
         std::vector<bounded_plane::ptr_t>  planes_;
+        std::string guid_;
 };
 
 #include "impl/representation.hpp"

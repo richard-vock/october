@@ -14,8 +14,9 @@ representation::from_files(const std::vector<fs::path>& file_paths, float area_t
     unique_extensions.resize(std::distance(unique_extensions.begin(), new_end));
     for (auto adapter : adapters) {
         if (!adapter->supports_extension(unique_extensions)) continue;
-        auto planes = adapter->extract_planes(paths, area_threshold, angle_threshold);
-        return ptr_t(new representation(planes));
+        std::string guid;
+        auto planes = adapter->extract_planes(paths, area_threshold, angle_threshold, guid);
+        return ptr_t(new representation(planes, guid));
     }
     throw std::runtime_error("representation::from_file(const fs::path&): No suitable adapter found.");
 }
@@ -23,7 +24,7 @@ representation::from_files(const std::vector<fs::path>& file_paths, float area_t
 representation::~representation() {
 }
 
-representation::representation(const std::vector<bounded_plane::ptr_t>& planes) : planes_(planes) {
+representation::representation(const std::vector<bounded_plane::ptr_t>& planes, const std::string& guid) : planes_(planes), guid_(guid) {
 }
 
 const std::vector<bounded_plane::ptr_t>&
@@ -37,6 +38,11 @@ representation::transform(const mat4f_t& transformation) {
         p->transform(transformation);
     }
 }
+
+const std::string&
+representation::guid() const {
+    return guid_;
+};
 
 
 } // october

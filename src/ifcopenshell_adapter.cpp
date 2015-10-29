@@ -12,7 +12,7 @@ namespace october {
 
 
 ifc_objects_t
-extract_objects_(const std::string& ifc_file);
+extract_objects_(const std::string& ifc_file, std::string& guid);
 
 std::vector<bounded_plane::ptr_t>
 ifc_wall_planes(const ifc_objects_t& objects, float area_threshold, float angle_threshold);
@@ -37,10 +37,10 @@ ifcopenshell_adapter::supports_extension(const std::vector<std::string>& extensi
 }
 
 std::vector<bounded_plane::ptr_t>
-ifcopenshell_adapter::extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold) {
+ifcopenshell_adapter::extract_planes(const std::vector<std::string>& file_paths, float area_threshold, float angle_threshold, std::string& guid) {
     ifc_objects_t objects;
     for (const auto& path : file_paths) {
-        auto file_objects = extract_objects_(path);
+        auto file_objects = extract_objects_(path, guid);
         objects.insert(objects.end(), file_objects.begin(), file_objects.end());
     }
     return ifc_wall_planes(objects, area_threshold, angle_threshold);
@@ -112,7 +112,7 @@ ifc_wall_planes(const ifc_objects_t& objects, float area_threshold, float angle_
 }
 
 ifc_objects_t
-extract_objects_(const std::string& ifc_file) {
+extract_objects_(const std::string& ifc_file, std::string& guid) {
     typedef typename openmesh_t::Point        point_t;
     typedef typename openmesh_t::Normal       normal_t;
     typedef typename openmesh_t::VertexHandle vertex_t;
@@ -131,6 +131,10 @@ extract_objects_(const std::string& ifc_file) {
     //settings.set(IfcGeom::IteratorSettings::EXCLUDE_SOLIDS_AND_SURFACES,  !include_model);
     
     IfcGeom::Iterator<double> context_iterator(settings, ifc_file);
+
+    IfcParse::IfcFile* file_ptr = context_iterator.getFile();
+    auto root_entity = file_ptr->entitiesByType<IfcSchema::IfcRoot>();
+    guid = (*root_entity->begin())->GlobalId();
 
     std::set<std::string> ignore_types;
     ignore_types.insert("ifcopeningelement");
