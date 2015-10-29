@@ -72,6 +72,7 @@ ifcmesh_adapter::extract_planes(const std::vector<std::string>& file_paths, floa
         if (!OpenMesh::IO::read_mesh(mesh, mesh_path.string(), opt)) {
             throw std::runtime_error("ifcmesh_adapter::extract_planes: Unable to load mesh file \"" + mesh_path.string() + "\"");
         }
+        mesh.update_normals();
         std::get<0>(ifc_obj) = mesh;
         std::get<1>(ifc_obj) = obj.guid;
         std::get<2>(ifc_obj) = obj.type;
