@@ -39,6 +39,25 @@ representation::transform(const mat4f_t& transformation) {
     }
 }
 
+void
+representation::center(mat4f_t* center_transformation) {
+    vec3f_t center = vec3f_t::Zero();
+    for (const auto& p : planes_) {
+        center += p->origin();
+    }
+    center /= planes_.size();
+    
+    mat4f_t trafo = mat4f_t::Identity();
+    
+    trafo.block<3, 1>(0, 3) = -center;
+    
+    transform(trafo);
+    
+    if (center_transformation) {
+        *center_transformation = trafo;
+    }
+}
+
 const std::string&
 representation::guid() const {
     return guid_;

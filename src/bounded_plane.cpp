@@ -107,7 +107,7 @@ bounded_plane::project_2d_line(const vec3f_t& project_dir) const {
 
 std::pair<vec2f_t, vec2f_t> bounded_plane::project_2d_line(const mat4f_t& pre_transform, const vec3f_t& project_dir) const {
     vec3f_t nrm = base_.col(2);
-    nrm = (pre_transform * nrm.homogeneous()).head(3);
+    nrm = pre_transform.topLeftCorner(3, 3) * nrm;
     vec3f_t line_dir = project_dir.cross(nrm).normalized();
     std::vector<float> lambdas;
     vec3f_t origin = (pre_transform * origin_.homogeneous()).head(3);
@@ -128,7 +128,7 @@ bounded_plane::is_orthogonal_to(const vec3f_t& dir, float angular_precision) con
 
 bool
 bounded_plane::is_orthogonal_to(const mat4f_t& pre_transform, const vec3f_t& dir, float angular_precision) const {
-    vec3f_t nrm = (pre_transform * normal().homogeneous()).head(3);
+    vec3f_t nrm = pre_transform.topLeftCorner(3, 3) * normal();
     return (1.f - fabs(nrm.dot(dir))) < angular_precision;
 }
 
@@ -139,7 +139,7 @@ bounded_plane::is_parallel_to(const vec3f_t& dir, float angular_precision) const
 
 bool
 bounded_plane::is_parallel_to(const mat4f_t& pre_transform, const vec3f_t& dir, float angular_precision) const {
-    vec3f_t nrm = (pre_transform * normal().homogeneous()).head(3);
+    vec3f_t nrm = pre_transform.topLeftCorner(3, 3) * normal();
     return fabs(nrm.dot(dir)) < angular_precision;
 }
 

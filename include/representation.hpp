@@ -29,6 +29,8 @@ class representation {
         const std::vector<bounded_plane::ptr_t>& planes() const;
 
         void transform(const mat4f_t& transformation);
+        
+        void center(mat4f_t* center_transformation = nullptr);
 
         const std::string& guid() const;
 

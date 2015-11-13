@@ -55,7 +55,7 @@ Eigen::Matrix3f image_transform(const bbox2f_t& bbox, uint32_t width, uint32_t h
     // to unit cube
     //transform = translation2f_t(-bbox.min());
     transform = translation2f_t(-bbox.center());
-    float bbox_range = sqrtf(2.f) * (bbox.max() - bbox.min()).maxCoeff();
+    float bbox_range = (bbox.max() - bbox.min()).maxCoeff();
     transform = Eigen::Scaling(1.f / bbox_range) * transform;
 
     // mirror Y

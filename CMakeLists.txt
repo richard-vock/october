@@ -13,9 +13,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     if (NOT WIN32)
         add_definitions(-fPIC)
     endif()
-	add_definitions(-O3)
-	add_definitions(-g)
-	add_definitions(-std=c++14)
+    add_definitions(-O3)
+    add_definitions(-g)
+    add_definitions(-std=c++14)
     add_definitions(-Wall)
     add_definitions(-Wno-unused-function)
     add_definitions(-Wno-unused-local-typedefs)
@@ -23,12 +23,13 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-Wno-deprecated-declarations)
     #add_definitions(-U__STRICT_ANSI__)
     add_definitions(-DM_LOG2E=1.44269504088896340736)
+    #add_definitions(-DOCTOBER_DEBUG)
 endif()
 
 # mandatory
 find_package(Eigen)
 find_package(OpenCV COMPONENTS core imgproc highgui)
-find_package(Boost COMPONENTS system filesystem)
+find_package(Boost COMPONENTS system filesystem program_options)
 
 # optional
 find_package(Cereal)
@@ -37,12 +38,13 @@ find_package(IfcOpenShell)
 find_package(OpenMesh)
 find_package(PCL COMPONENTS common io)
 find_package(PrimitiveDetection)
+find_package(E57PCL)
 
 file (GLOB_RECURSE obj RELATIVE "${PROJECT_SOURCE_DIR}" "src/*.cpp")
 if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGUI_FOUND AND Boost_FOUND)
-	include_directories(${EIGEN_INCLUDE_DIRS})
-	include_directories(${OpenCV_INCLUDE_DIRS})
-	include_directories(${Boost_INCLUDE_DIRS})
+    include_directories(${EIGEN_INCLUDE_DIRS})
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    include_directories(${Boost_INCLUDE_DIRS})
 
     if(CEREAL_FOUND)
         include_directories(${CEREAL_INCLUDE_DIR})
@@ -74,11 +76,18 @@ if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGU
     else()
         set(OPENMESH_LIBRARIES "")
     endif(OPENMESH_FOUND)
+    
+    if(E57PCL_FOUND)
+        include_directories(${E57PCL_INCLUDE_DIRS})
+        add_definitions(-DWITH_E57PCL)
+    else()
+        set(E57PCL_LIBRARIES "")
+    endif(E57PCL_FOUND)
 
     add_library(october SHARED ${obj})
-    target_link_libraries(october ${OpenCV_LIBRARIES} ${BOOST_LIBRARIES} ${OPENCASCADE_LIBRARIES} ${IFCOPENSHELL_LIBRARIES} ${OPENMESH_LIBRARIES} ${PCL_LIBRARIES} ${PRIMITIVE_DETECTION_LIBRARIES} "dl")
+    target_link_libraries(october ${OpenCV_LIBRARIES} ${Boost_LIBRARIES} ${OPENCASCADE_LIBRARIES} ${IFCOPENSHELL_LIBRARIES} ${OPENMESH_LIBRARIES} ${PCL_LIBRARIES} ${E57PCL_LIBRARIES} ${PRIMITIVE_DETECTION_LIBRARIES} "dl")
 
-	# install binary
+    # install binary
     if (WIN32)
         install (FILES "${PROJECT_BINARY_DIR}/liboctober.dll.a" DESTINATION lib)
         #install (FILES "${PROJECT_BINARY_DIR}/liboctober.dll" DESTINATION lib)
@@ -87,6 +96,10 @@ if (EIGEN_FOUND AND OPENCV_CORE_FOUND AND OPENCV_IMGPROC_FOUND AND OPENCV_HIGHGU
         install (TARGETS october DESTINATION lib)
     endif()
 
-	# install header
+    # install header
     install (DIRECTORY include/ DESTINATION include/october)
+    
+    # install find module
+    file (GLOB find_modules RELATIVE "${PROJECT_SOURCE_DIR}" "cmake/modules/self/*.cmake")
+    install (FILES ${find_modules} DESTINATION share/october)
 endif()
